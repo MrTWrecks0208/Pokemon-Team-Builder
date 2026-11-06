@@ -1,0 +1,148 @@
+import { HeldItem } from '../types/pokemon';
+
+export const COMPETITIVE_ITEMS: HeldItem[] = [
+  {
+    id: 'booster-energy',
+    name: 'Booster Energy',
+    category: 'offensive',
+    description: 'Activates Protosynthesis or Quark Drive, boosting the highest stat by 30% (50% if Speed).',
+  },
+  {
+    id: 'focus-sash',
+    name: 'Focus Sash',
+    category: 'defensive',
+    description: 'If holder has full HP, survives an attack that would KO it with 1 HP. Single use.',
+  },
+  {
+    id: 'choice-band',
+    name: 'Choice Band',
+    category: 'choice',
+    description: "Holder's Attack is 1.5x, but can only select the first move executed.",
+  },
+  {
+    id: 'choice-specs',
+    name: 'Choice Specs',
+    category: 'choice',
+    description: "Holder's Sp. Atk is 1.5x, but can only select the first move executed.",
+  },
+  {
+    id: 'choice-scarf',
+    name: 'Choice Scarf',
+    category: 'choice',
+    description: "Holder's Speed is 1.5x, but can only select the first move executed.",
+  },
+  {
+    id: 'life-orb',
+    name: 'Life Orb',
+    category: 'offensive',
+    description: "Holder's attacks do 1.3x damage, and it loses 1/10 of its max HP after attack.",
+  },
+  {
+    id: 'assault-vest',
+    name: 'Assault Vest',
+    category: 'defensive',
+    description: "Holder's Sp. Def is 1.5x, but cannot use status moves.",
+  },
+  {
+    id: 'leftovers',
+    name: 'Leftovers',
+    category: 'defensive',
+    description: 'At the end of every turn, holder restores 1/16 of its max HP.',
+  },
+  {
+    id: 'rocky-helmet',
+    name: 'Rocky Helmet',
+    category: 'defensive',
+    description: 'If holder is hit by a contact move, attacker loses 1/6 of its max HP.',
+  },
+  {
+    id: 'sitrus-berry',
+    name: 'Sitrus Berry',
+    category: 'berry',
+    description: 'Restores 1/4 of max HP when holder falls below 50% max HP.',
+  },
+  {
+    id: 'clear-amulet',
+    name: 'Clear Amulet',
+    category: 'utility',
+    description: "Protects the holder from having its stats lowered by opponents' moves or abilities (e.g. Intimidate).",
+  },
+  {
+    id: 'covert-cloak',
+    name: 'Covert Cloak',
+    category: 'utility',
+    description: 'Protects the holder from the secondary effects of damage moves (e.g. flinches from Fake Out).',
+  },
+  {
+    id: 'safety-goggles',
+    name: 'Safety Goggles',
+    category: 'utility',
+    description: 'Holder is immune to powder moves (Spore, Sleep Powder) and sandstorm/hail damage.',
+  },
+  {
+    id: 'heavy-duty-boots',
+    name: 'Heavy-Duty Boots',
+    category: 'utility',
+    description: 'Prevents hazards (Stealth Rock, Spikes, Sticky Web) from affecting the holder upon switch-in.',
+  },
+  {
+    id: 'loaded-dice',
+    name: 'Loaded Dice',
+    category: 'offensive',
+    description: 'Multi-strike moves (e.g. Scale Shot, Bullet Seed, Icicle Spear) always hit 4 or 5 times.',
+  },
+  {
+    id: 'weakness-policy',
+    name: 'Weakness Policy',
+    category: 'offensive',
+    description: 'Sharply raises holder Attack and Sp. Atk (+2 stages each) when hit by super-effective move.',
+  },
+  {
+    id: 'eviolite',
+    name: 'Eviolite',
+    category: 'defensive',
+    description: "Holder's Defense and Sp. Def are 1.5x if it can still evolve.",
+  },
+  {
+    id: 'light-clay',
+    name: 'Light Clay',
+    category: 'utility',
+    description: "Extends duration of Reflect, Light Screen, and Aurora Veil from 5 to 8 turns.",
+  },
+  {
+    id: 'mental-herb',
+    name: 'Mental Herb',
+    category: 'utility',
+    description: 'Cures holder of Taunt, Encore, Torment, Disable, and infatuation once.',
+  },
+  {
+    id: 'white-herb',
+    name: 'White Herb',
+    category: 'utility',
+    description: 'Restores all lowered stats back to neutral once.',
+  },
+  {
+    id: 'lum-berry',
+    name: 'Lum Berry',
+    category: 'berry',
+    description: 'Cures any major status condition (burn, freeze, paralysis, poison, sleep, confusion).',
+  },
+  {
+    id: 'expert-belt',
+    name: 'Expert Belt',
+    category: 'offensive',
+    description: 'Attacks that are super effective deal 1.2x damage without recoil.',
+  },
+  {
+    id: 'air-balloon',
+    name: 'Air Balloon',
+    category: 'utility',
+    description: 'Holder is immune to Ground-type attacks and arena hazards until hit by an attack.',
+  },
+  {
+    id: 'black-sludge',
+    name: 'Black Sludge',
+    category: 'defensive',
+    description: 'Recovers 1/16 HP each turn for Poison types; hurts non-Poison holders.',
+  },
+];

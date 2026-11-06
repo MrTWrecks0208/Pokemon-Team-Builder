@@ -1,0 +1,6 @@
+{
+  "name": "Pokémon Champions - Competitive Team Builder",
+  "description": "Generate and optimize championship lineups for Singles and Doubles Pokémon battles with PokéAPI data, EV/IV tuning, synergy analysis, drag-and-drop squad management, interactive type charts, and image export.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
