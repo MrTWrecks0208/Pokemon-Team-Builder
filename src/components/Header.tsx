@@ -8,6 +8,7 @@ interface HeaderProps {
   onOpenTypeChart: () => void;
   onOpenSavedSquads: () => void;
   onOpenExport: () => void;
+  onOpenSynergyReport: () => void;
   onAddNewPokemon: () => void;
   isDark: boolean;
   onToggleTheme: () => void;
@@ -20,6 +21,7 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenTypeChart,
   onOpenSavedSquads,
   onOpenExport,
+  onOpenSynergyReport,
   onAddNewPokemon,
   isDark,
   onToggleTheme,
@@ -79,6 +81,18 @@ export const Header: React.FC<HeaderProps> = ({
 
         {/* Zone 3: Navigation Tools & Actions */}
         <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+          {/* AI Synergy Report Tool */}
+          <button
+            type="button"
+            onClick={onOpenSynergyReport}
+            title="Generate AI Synergy Report"
+            className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold text-purple-700 dark:text-purple-300 bg-purple-50 dark:bg-purple-950/50 hover:bg-purple-100 dark:hover:bg-purple-900/60 rounded-lg border border-purple-200 dark:border-purple-800 transition-colors"
+          >
+            <Sparkles className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
+            <span className="hidden lg:inline">AI Synergy Report</span>
+            <span className="lg:hidden">AI Audit</span>
+          </button>
+
           {/* Type Chart Tool */}
           <button
             type="button"

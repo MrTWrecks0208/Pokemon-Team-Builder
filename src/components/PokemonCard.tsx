@@ -328,7 +328,7 @@ export const PokemonCard: React.FC<PokemonCardProps> = ({
       {/* Bottom CTA: Customize / Tune */}
       <div className="px-3 py-2 border-t border-slate-100 dark:border-slate-800/80 bg-slate-50/50 dark:bg-slate-900/50 flex items-center justify-between gap-2">
         <span className="text-[11px] text-slate-500 dark:text-slate-400 truncate">
-          EV: {member.evs.hp}/{member.evs.atk}/{member.evs.def}/{member.evs.spa}/{member.evs.spd}/{member.evs.spe}
+          SP: {member.evs.hp}/{member.evs.atk}/{member.evs.def}/{member.evs.spa}/{member.evs.spd}/{member.evs.spe}
         </span>
         <button
           type="button"

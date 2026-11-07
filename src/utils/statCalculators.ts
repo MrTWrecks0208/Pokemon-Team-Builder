@@ -3,45 +3,103 @@ import { getNatureMultiplier } from '../data/natures';
 import { ALL_POKEMON_TYPES, getPokemonDefensiveMatchups } from '../data/types';
 
 /**
- * Calculates a single stat at Level 50 according to competitive Pokémon mechanics
+ * Calculates a single stat at Level 50 according to Pokémon Champions mechanics:
+ * - All Pokémon have fixed 31 IVs.
+ * - Stat Points (0-32 per stat, from 66 total points budget) add +1 directly to the stat at Level 50.
+ * - Nature provides +10% or -10% multiplier.
  */
+export function calculateStatAtLevel50(
+  statName: StatName,
+  base: number,
+  statPoint: number,
+  nature: Nature,
+  speciesName?: string
+): number;
 export function calculateStatAtLevel50(
   statName: StatName,
   base: number,
   iv: number,
   ev: number,
   nature: Nature,
-  speciesName: string = ''
+  speciesName?: string
+): number;
+export function calculateStatAtLevel50(
+  statName: StatName,
+  base: number,
+  arg3: number,
+  arg4?: any,
+  arg5?: any,
+  arg6: string = ''
 ): number {
-  if (statName === 'hp') {
-    if (speciesName.toLowerCase() === 'shedinja') return 1;
-    // Formula: floor(((2 * Base + IV + floor(EV / 4)) * Level) / 100) + Level + 10
-    const raw = Math.floor(((2 * base + iv + Math.floor(ev / 4)) * 50) / 100);
-    return raw + 50 + 10;
+  let statPoint = 0;
+  let nature: Nature = { name: 'Serious', increasedStat: null, decreasedStat: null };
+  let name = arg6;
+
+  if (arg5 && typeof arg5 === 'object' && 'name' in arg5) {
+    // Legacy 6-arg or 5-arg signature: (statName, base, iv, ev, nature, speciesName)
+    const rawVal = Number(arg4) || 0;
+    statPoint = rawVal > 32 ? Math.min(32, Math.round(rawVal / 8)) : rawVal;
+    nature = arg5;
+  } else if (arg4 && typeof arg4 === 'object' && 'name' in arg4) {
+    // Champions signature: (statName, base, statPoint, nature, speciesName)
+    const rawVal = Number(arg3) || 0;
+    statPoint = rawVal > 32 ? Math.min(32, Math.round(rawVal / 8)) : rawVal;
+    nature = arg4;
+    if (typeof arg5 === 'string') name = arg5;
+  } else {
+    statPoint = Number(arg3) || 0;
   }
 
-  // Other stats: floor((floor(((2 * Base + IV + floor(EV / 4)) * Level) / 100) + 5) * Nature)
-  const raw = Math.floor(((2 * base + iv + Math.floor(ev / 4)) * 50) / 100) + 5;
+  // Cap stat points per single stat at 32
+  statPoint = Math.max(0, Math.min(32, statPoint));
+
+  if (statName === 'hp') {
+    if (name.toLowerCase() === 'shedinja') return 1;
+    // Formula with 31 IV at level 50: floor(((2 * Base + 31) * 50) / 100) + 50 + 10 = base + 75
+    const baseHp = Math.floor(((2 * base + 31) * 50) / 100) + 60;
+    return baseHp + statPoint;
+  }
+
+  // Other stats: floor(((2 * Base + 31) * 50) / 100) + 5
+  const rawBase = Math.floor(((2 * base + 31) * 50) / 100) + 5;
   const mult = getNatureMultiplier(nature, statName);
-  return Math.floor(raw * mult);
+  const withNature = Math.floor(rawBase * mult);
+  return withNature + statPoint;
 }
 
 /**
- * Calculates all 6 stats at Level 50
+ * Calculates all 6 stats at Level 50 for Pokémon Champions
  */
 export function calculateAllStats(
   species: PokemonSpecies,
-  ivs: StatSpread,
-  evs: StatSpread,
-  nature: Nature
+  arg2: any,
+  arg3?: any,
+  arg4?: any
 ): StatSpread {
+  // Check if called as calculateAllStats(species, statPoints, nature)
+  // or legacy calculateAllStats(species, ivs, evs, nature)
+  let points: StatSpread = { hp: 0, atk: 0, def: 0, spa: 0, spd: 0, spe: 0 };
+  let nature: Nature = { name: 'Serious', increasedStat: null, decreasedStat: null };
+
+  if (arg4 && typeof arg4 === 'object' && 'name' in arg4) {
+    // Legacy (species, ivs, evs, nature)
+    points = arg3 || points;
+    nature = arg4;
+  } else if (arg3 && typeof arg3 === 'object' && 'name' in arg3) {
+    // Champions (species, statPoints, nature)
+    points = arg2 || points;
+    nature = arg3;
+  } else if (arg2 && typeof arg2 === 'object') {
+    points = arg2;
+  }
+
   return {
-    hp: calculateStatAtLevel50('hp', species.baseStats.hp, ivs.hp, evs.hp, nature, species.name),
-    atk: calculateStatAtLevel50('atk', species.baseStats.atk, ivs.atk, evs.atk, nature, species.name),
-    def: calculateStatAtLevel50('def', species.baseStats.def, ivs.def, evs.def, nature, species.name),
-    spa: calculateStatAtLevel50('spa', species.baseStats.spa, ivs.spa, evs.spa, nature, species.name),
-    spd: calculateStatAtLevel50('spd', species.baseStats.spd, ivs.spd, evs.spd, nature, species.name),
-    spe: calculateStatAtLevel50('spe', species.baseStats.spe, ivs.spe, evs.spe, nature, species.name),
+    hp: calculateStatAtLevel50('hp', species.baseStats.hp, points.hp, nature, species.name),
+    atk: calculateStatAtLevel50('atk', species.baseStats.atk, points.atk, nature, species.name),
+    def: calculateStatAtLevel50('def', species.baseStats.def, points.def, nature, species.name),
+    spa: calculateStatAtLevel50('spa', species.baseStats.spa, points.spa, nature, species.name),
+    spd: calculateStatAtLevel50('spd', species.baseStats.spd, points.spd, nature, species.name),
+    spe: calculateStatAtLevel50('spe', species.baseStats.spe, points.spe, nature, species.name),
   };
 }
 

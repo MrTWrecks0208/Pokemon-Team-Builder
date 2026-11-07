@@ -9,7 +9,7 @@ function createMember(
   speciesName: string,
   natureName: string,
   itemId: string,
-  evs: { hp: number; atk: number; def: number; spa: number; spd: number; spe: number },
+  rawPoints: { hp: number; atk: number; def: number; spa: number; spd: number; spe: number },
   moveIds: string[],
   role: string
 ): TeamMember {
@@ -18,12 +18,22 @@ function createMember(
   const item = COMPETITIVE_ITEMS.find(i => i.id === itemId) || null;
   const ivs = { hp: 31, atk: 31, def: 31, spa: 31, spd: 31, spe: 31 };
 
+  // Scale to Pokemon Champions 66-point budget (max 32 per stat)
+  const evs = {
+    hp: Math.min(32, rawPoints.hp > 32 ? Math.round(rawPoints.hp / 8) : rawPoints.hp),
+    atk: Math.min(32, rawPoints.atk > 32 ? Math.round(rawPoints.atk / 8) : rawPoints.atk),
+    def: Math.min(32, rawPoints.def > 32 ? Math.round(rawPoints.def / 8) : rawPoints.def),
+    spa: Math.min(32, rawPoints.spa > 32 ? Math.round(rawPoints.spa / 8) : rawPoints.spa),
+    spd: Math.min(32, rawPoints.spd > 32 ? Math.round(rawPoints.spd / 8) : rawPoints.spd),
+    spe: Math.min(32, rawPoints.spe > 32 ? Math.round(rawPoints.spe / 8) : rawPoints.spe),
+  };
+
   const moves: (Move | null)[] = moveIds.map(mId => {
     return species.availableMoves.find(m => m.id === mId) || species.availableMoves[0] || null;
   });
   while (moves.length < 4) moves.push(null);
 
-  const calculatedStats = calculateAllStats(species, ivs, evs, nature);
+  const calculatedStats = calculateAllStats(species, evs, nature);
   const powerRating = calculatePokemonPowerRating(calculatedStats, species, moves, item, nature);
 
   return {
@@ -49,7 +59,7 @@ export const SAMPLE_TEAMS: SavedTeam[] = [
     name: 'VGC World Championship Sun Core',
     format: 'doubles',
     updatedAt: Date.now(),
-    notes: 'Dominant Doubles lineup featuring Sun weather synergy, speed control, priority blocking, and relentless offensive pressure.',
+    notes: 'A premier tournament archetype built around Harsh Sunlight weather. Koraidon sets Sun via Orichalcum Pulse (boosting Fire damage by 50% while activating Flutter Mane Protosynthesis speed boost). Incineroar and Rillaboom provide essential Fake Out/Intimidate cycling, Farigiraf completely blocks opponent priority attacks with Armor Tail, and Ogerpon Wellspring redirects moves with Follow Me while countering opposing Rain squads with Water Absorb.',
     members: [
       createMember(0, 'koraidon', 'Jolly', 'life-orb', { hp: 4, atk: 252, def: 0, spa: 0, spd: 0, spe: 252 }, ['collision-course', 'flare-blitz', 'dragon-claw', 'protect'], 'Sun Setter & Breaker'),
       createMember(1, 'flutter-mane', 'Timid', 'booster-energy', { hp: 116, atk: 0, def: 100, spa: 116, spd: 4, spe: 172 }, ['moonblast', 'shadow-ball', 'dazzling-gleam', 'protect'], 'Special Sweeper'),

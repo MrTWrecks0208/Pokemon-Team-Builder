@@ -130,3 +130,54 @@ export interface TeamAnalysis {
   synergyWarnings: string[];
   synergyStrengths: string[];
 }
+
+export interface DefensiveWeaknessItem {
+  type: string;
+  severity: 'critical' | 'warning' | 'moderate';
+  description: string;
+  affectedPokemon?: string[];
+}
+
+export interface MissingCoverageItem {
+  targetType: string;
+  explanation: string;
+}
+
+export interface RecommendedAdditionItem {
+  pokemonName: string;
+  role: string;
+  whyItHelps: string;
+  suggestedItem: string;
+  suggestedAbility: string;
+  suggestedMoves: string[];
+  replacesOrComplements?: string;
+}
+
+export interface AuditPoint {
+  problem: string;
+  severity: 'critical' | 'warning' | 'moderate';
+  typeCategory?: string;
+  solutions: string[];
+  threatenedPokemon?: string[];
+  suggestedAddition?: {
+    name: string;
+    role: string;
+    item: string;
+    ability: string;
+    moves: string[];
+  };
+}
+
+export interface TeamReport {
+  synergyGrade: string;
+  archetype: string;
+  summary: string;
+  auditPoints: AuditPoint[];
+  threatenedSummary?: string[];
+  defensiveWeaknesses?: DefensiveWeaknessItem[];
+  missingCoverage?: MissingCoverageItem[];
+  recommendedAdditions?: RecommendedAdditionItem[];
+  tacticalTips?: string[];
+  generatedAt?: number;
+}
+

@@ -4,11 +4,22 @@
  */
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { BattleFormat, Move, PokemonSpecies, SavedTeam, TeamMember } from './types/pokemon';
+import {
+  BattleFormat,
+  Move,
+  PokemonSpecies,
+  RecommendedAdditionItem,
+  SavedTeam,
+  TeamMember,
+  TeamReport,
+} from './types/pokemon';
 import { SAMPLE_TEAMS } from './data/sampleTeams';
+import { PRESET_COMPETITIVE_POKEMON } from './data/pokemonDatabase';
 import { NATURE_MAP } from './data/natures';
 import { COMPETITIVE_ITEMS } from './data/items';
 import { analyzeTeam, calculateAllStats, calculatePokemonPowerRating } from './utils/statCalculators';
+import { generateTeamReport } from './services/synergyService';
+import { fetchPokemonFromPokeAPI } from './services/pokeapi';
 import { Header } from './components/Header';
 import { TeamSlotsGrid } from './components/TeamSlotsGrid';
 import { TeamSummaryPanel } from './components/TeamSummaryPanel';
@@ -17,6 +28,7 @@ import { PokemonCustomizerModal } from './components/PokemonCustomizerModal';
 import { TypeChartModal } from './components/TypeChartModal';
 import { SavedTeamsDrawer } from './components/SavedTeamsDrawer';
 import { ExportCardModal } from './components/ExportCardModal';
+import { TeamReportModal } from './components/TeamReportModal';
 import {
   Trophy,
   Swords,
@@ -127,6 +139,12 @@ export default function App() {
   const [savedSquadsOpen, setSavedSquadsOpen] = useState(false);
   const [exportModalOpen, setExportModalOpen] = useState(false);
 
+  // AI Synergy Report State
+  const [synergyReportModalOpen, setSynergyReportModalOpen] = useState(false);
+  const [isAnalyzingSynergy, setIsAnalyzingSynergy] = useState(false);
+  const [teamReport, setTeamReport] = useState<TeamReport | null>(null);
+  const [synergyError, setSynergyError] = useState<string | null>(null);
+
   // Team Synergy & Power Analysis
   const teamAnalysis = useMemo(() => {
     return analyzeTeam(members);
@@ -162,14 +180,14 @@ export default function App() {
     const initialMoves: (Move | null)[] = [...species.availableMoves.slice(0, 4)];
     while (initialMoves.length < 4) initialMoves.push(null);
 
-    // Default EVs
+    // Default Stat Points in Pokémon Champions (66 total points budget, max 32 per stat)
     const defaultEvs = species.baseStats.spa > species.baseStats.atk
-      ? { hp: 4, atk: 0, def: 0, spa: 252, spd: 0, spe: 252 }
-      : { hp: 4, atk: 252, def: 0, spa: 0, spd: 0, spe: 252 };
+      ? { hp: 2, atk: 0, def: 0, spa: 32, spd: 0, spe: 32 }
+      : { hp: 2, atk: 32, def: 0, spa: 0, spd: 0, spe: 32 };
 
     const defaultIvs = { hp: 31, atk: 31, def: 31, spa: 31, spd: 31, spe: 31 };
 
-    const calculatedStats = calculateAllStats(species, defaultIvs, defaultEvs, defaultNature);
+    const calculatedStats = calculateAllStats(species, defaultEvs, defaultNature);
     const powerRating = calculatePokemonPowerRating(calculatedStats, species, initialMoves, defaultItem, defaultNature);
 
     const newMember: TeamMember = {
@@ -290,6 +308,112 @@ export default function App() {
     handleLoadTeam(imported);
   };
 
+  // AI Synergy Report Triggers & Handlers
+  const handleTriggerSynergyAnalysis = useCallback(async () => {
+    const activeCount = members.filter(m => m !== null).length;
+    if (activeCount === 0) {
+      alert('Please add at least 1 Pokémon to your squad before generating an AI Synergy Report.');
+      return;
+    }
+
+    setSynergyReportModalOpen(true);
+    setIsAnalyzingSynergy(true);
+    setSynergyError(null);
+
+    try {
+      const rep = await generateTeamReport(members, battleFormat, teamName, teamAnalysis);
+      setTeamReport(rep);
+    } catch (err: any) {
+      console.error('Synergy generation error:', err);
+      setSynergyError(err.message || 'Failed to generate team report.');
+    } finally {
+      setIsAnalyzingSynergy(false);
+    }
+  }, [members, battleFormat, teamName, teamAnalysis]);
+
+  const handleAdoptRecommendation = useCallback(async (rec: RecommendedAdditionItem) => {
+    let targetSpecies = PRESET_COMPETITIVE_POKEMON.find(
+      p => p.displayName.toLowerCase() === rec.pokemonName.toLowerCase() ||
+           p.name.toLowerCase() === rec.pokemonName.toLowerCase().replace(/\s+/g, '-')
+    );
+
+    if (!targetSpecies) {
+      targetSpecies = (await fetchPokemonFromPokeAPI(rec.pokemonName)) || undefined;
+    }
+
+    if (!targetSpecies) {
+      alert(`Could not find Pokédex data for ${rec.pokemonName}.`);
+      return;
+    }
+
+    // Determine target slot (first empty slot or last slot 5)
+    const emptyIndex = members.findIndex(m => m === null);
+    const targetIdx = emptyIndex !== -1 ? emptyIndex : 5;
+
+    const matchedItem = COMPETITIVE_ITEMS.find(
+      i => i.name.toLowerCase() === rec.suggestedItem.toLowerCase()
+    ) || COMPETITIVE_ITEMS[0];
+
+    const matchedAbility = targetSpecies.abilities.find(
+      a => a.name.toLowerCase() === rec.suggestedAbility.toLowerCase()
+    ) || targetSpecies.abilities[0];
+
+    const matchedMoves: (Move | null)[] = rec.suggestedMoves.map(mName => {
+      const existing = targetSpecies!.availableMoves.find(
+        m => m.name.toLowerCase() === mName.toLowerCase()
+      );
+      if (existing) return existing;
+      return {
+        id: mName.toLowerCase().replace(/\s+/g, '-'),
+        name: mName,
+        type: targetSpecies!.types[0] || 'normal',
+        category: 'physical',
+        power: 80,
+        accuracy: 100,
+        pp: 15,
+        description: 'Recommended competitive attack.',
+      };
+    });
+    while (matchedMoves.length < 4) matchedMoves.push(null);
+
+    const nature = targetSpecies.baseStats.spa > targetSpecies.baseStats.atk
+      ? (targetSpecies.baseStats.spe >= 100 ? NATURE_MAP['timid'] : NATURE_MAP['modest'])
+      : (targetSpecies.baseStats.spe >= 100 ? NATURE_MAP['jolly'] : NATURE_MAP['adamant']);
+
+    const defaultEvs = targetSpecies.baseStats.spa > targetSpecies.baseStats.atk
+      ? { hp: 2, atk: 0, def: 0, spa: 32, spd: 0, spe: 32 }
+      : { hp: 2, atk: 32, def: 0, spa: 0, spd: 0, spe: 32 };
+
+    const defaultIvs = { hp: 31, atk: 31, def: 31, spa: 31, spd: 31, spe: 31 };
+
+    const calculatedStats = calculateAllStats(targetSpecies, defaultEvs, nature);
+    const powerRating = calculatePokemonPowerRating(calculatedStats, targetSpecies, matchedMoves, matchedItem, nature);
+
+    const newMember: TeamMember = {
+      id: `member-${targetIdx}-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+      slotIndex: targetIdx,
+      species: targetSpecies,
+      level: 50,
+      nature,
+      ability: matchedAbility,
+      item: matchedItem,
+      moves: matchedMoves,
+      evs: defaultEvs,
+      ivs: defaultIvs,
+      role: rec.role,
+      calculatedStats,
+      powerRating,
+    };
+
+    setMembers(prev => {
+      const copy = [...prev];
+      copy[targetIdx] = newMember;
+      return copy;
+    });
+
+    setSynergyReportModalOpen(false);
+  }, [members]);
+
   return (
     <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors selection:bg-rose-500 selection:text-white">
       {/* Top Bar Contract (3 zones) */}
@@ -299,6 +423,7 @@ export default function App() {
         onOpenTypeChart={() => setTypeChartModalOpen(true)}
         onOpenSavedSquads={() => setSavedSquadsOpen(true)}
         onOpenExport={() => setExportModalOpen(true)}
+        onOpenSynergyReport={handleTriggerSynergyAnalysis}
         onAddNewPokemon={handleAddNewPokemonCTA}
         isDark={isDark}
         onToggleTheme={toggleTheme}
@@ -364,6 +489,14 @@ export default function App() {
           <div className="flex items-center gap-2 shrink-0">
             <button
               type="button"
+              onClick={handleTriggerSynergyAnalysis}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg border border-purple-200 dark:border-purple-800 bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 hover:bg-purple-100 dark:hover:bg-purple-900/60 transition-colors"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
+              <span>AI Synergy</span>
+            </button>
+            <button
+              type="button"
               onClick={() => setSavedSquadsOpen(true)}
               className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/80 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
             >
@@ -399,6 +532,8 @@ export default function App() {
           members={members}
           battleFormat={battleFormat}
           onOpenTypeChart={() => setTypeChartModalOpen(true)}
+          onOpenSynergyReport={handleTriggerSynergyAnalysis}
+          isAnalyzing={isAnalyzingSynergy}
         />
       </main>
 
@@ -479,6 +614,18 @@ export default function App() {
         battleFormat={battleFormat}
         teamName={teamName}
         analysis={teamAnalysis}
+      />
+
+      <TeamReportModal
+        isOpen={synergyReportModalOpen}
+        onClose={() => setSynergyReportModalOpen(false)}
+        report={teamReport}
+        isLoading={isAnalyzingSynergy}
+        error={synergyError}
+        teamName={teamName}
+        battleFormat={battleFormat}
+        onRefreshAnalysis={handleTriggerSynergyAnalysis}
+        onAdoptRecommendation={handleAdoptRecommendation}
       />
     </div>
   );

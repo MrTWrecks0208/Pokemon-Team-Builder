@@ -97,11 +97,16 @@ export const PokemonSearchModal: React.FC<PokemonSearchModalProps> = ({
         {/* Header */}
         <div className="px-5 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between gap-4">
           <div>
-            <h3 className="font-display font-bold text-lg text-slate-900 dark:text-white">
-              Select Pokémon for Slot #{targetSlotIndex + 1}
-            </h3>
+            <div className="flex items-center gap-2">
+              <h3 className="font-display font-bold text-lg text-slate-900 dark:text-white">
+                Select Pokémon for Slot #{targetSlotIndex + 1}
+              </h3>
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800 uppercase font-mono">
+                Champions Legal
+              </span>
+            </div>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-              Instant autocomplete across competitive meta &amp; full PokéAPI national dex
+              Filtered for the official Pokémon Champions battle roster (fully evolved species &amp; Pikachu)
             </p>
           </div>
           <button

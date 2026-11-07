@@ -68,10 +68,74 @@ export async function fetchMoveDetails(moveName: string): Promise<Move | null> {
 }
 
 /**
- * Fetch a Pokémon from PokéAPI or return cached/local data
+ * Maps common pre-evolutions to their legal Pokemon Champions battle-ready forms.
+ * (In Pokemon Champions, only fully evolved Pokemon and Pikachu are battle legal).
+ */
+export const PRE_EVOLUTION_MAPPINGS: Record<string, string> = {
+  charmander: 'charizard',
+  charmeleon: 'charizard',
+  bulbasaur: 'venusaur',
+  ivysaur: 'venusaur',
+  squirtle: 'blastoise',
+  wartortle: 'blastoise',
+  pichu: 'pikachu',
+  caterpie: 'butterfree',
+  metapod: 'butterfree',
+  weedle: 'beedrill',
+  pidgey: 'pidgeot',
+  rattata: 'raticate',
+  gastly: 'gengar',
+  haunter: 'gengar',
+  abra: 'alakazam',
+  kadabra: 'alakazam',
+  machop: 'machamp',
+  machoke: 'machamp',
+  geodude: 'golem',
+  graveler: 'golem',
+  magikarp: 'gyarados',
+  dratini: 'dragonite',
+  dragonair: 'dragonite',
+  larvitar: 'tyranitar',
+  pupitar: 'tyranitar',
+  treecko: 'sceptile',
+  torchic: 'blaziken',
+  mudkip: 'swampert',
+  bagon: 'salamence',
+  shelgon: 'salamence',
+  beldum: 'metagross',
+  metang: 'metagross',
+  gible: 'garchomp',
+  gabite: 'garchomp',
+  riolu: 'lucario',
+  deino: 'hydreigon',
+  zweilous: 'hydreigon',
+  froakie: 'greninja',
+  frogadier: 'greninja',
+  litten: 'incineroar',
+  torracat: 'incineroar',
+  grookey: 'rillaboom',
+  thwackey: 'rillaboom',
+  scorbunny: 'cinderace',
+  dreepy: 'dragapult',
+  drakloak: 'dragapult',
+  sprigatito: 'meowscarada',
+  fuecoco: 'skeledirge',
+  quaxly: 'quaquaval',
+  charcadet: 'armarouge',
+  frigibax: 'baxcalibur',
+  arctibax: 'baxcalibur',
+};
+
+/**
+ * Fetch a Pokémon from PokéAPI or return cached/local data, ensuring Champions legality
  */
 export async function fetchPokemonFromPokeAPI(query: string): Promise<PokemonSpecies | null> {
-  const normalizedQuery = query.toLowerCase().trim().replace(/\s+/g, '-');
+  let normalizedQuery = query.toLowerCase().trim().replace(/\s+/g, '-');
+
+  // Check if query is an un-evolved species; if so, resolve to legal Champions evolution
+  if (PRE_EVOLUTION_MAPPINGS[normalizedQuery]) {
+    normalizedQuery = PRE_EVOLUTION_MAPPINGS[normalizedQuery];
+  }
 
   // Check preset first
   const presetMatch = PRESET_COMPETITIVE_POKEMON.find(

@@ -44,9 +44,40 @@ export const NATURE_MAP: Record<string, Nature> = NATURES.reduce((acc, nature) =
   return acc;
 }, {} as Record<string, Nature>);
 
+export const STAT_ALIGNMENT_ROW_HEADERS = [
+  'Atk+',
+  'Def+',
+  'Sp. Atk+',
+  'Sp. Def+',
+  'Speed+',
+];
+
+export const STAT_ALIGNMENT_COL_HEADERS = [
+  'Atk-',
+  'Def-',
+  'Sp. Atk-',
+  'Sp. Def-',
+  'Speed-',
+];
+
+/**
+ * 5x5 Stat Alignment table as defined in Pokemon Champions:
+ * Rows (from top to bottom): Attack+, Defense+, Special Attack+, Special Defense+, Speed+
+ * Cols (from left to right): Attack-, Defense-, Special Attack-, Special Defense-, Speed-
+ * "" represents empty blank space on diagonal where multipliers cancel.
+ */
+export const NATURE_ALIGNMENT_TABLE: string[][] = [
+  ['Serious', 'Lonely', 'Adamant', 'Naughty', 'Brave'],
+  ['Bold', '', 'Impish', 'Lax', 'Relaxed'],
+  ['Modest', 'Mild', '', 'Rash', 'Quiet'],
+  ['Calm', 'Gentle', 'Careful', '', 'Sassy'],
+  ['Timid', 'Hasty', 'Jolly', 'Naive', ''],
+];
+
 export function getNatureMultiplier(nature: Nature, stat: StatName): number {
   if (nature.increasedStat === stat && nature.decreasedStat === stat) return 1.0;
   if (nature.increasedStat === stat) return 1.1;
   if (nature.decreasedStat === stat) return 0.9;
   return 1.0;
 }
+
