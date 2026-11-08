@@ -1,5 +1,5 @@
 import { Ability, BaseStats, Move, MoveCategory, PokemonSpecies, PokemonType } from '../types/pokemon';
-import { PRESET_COMPETITIVE_POKEMON } from '../data/pokemonDatabase';
+import { PRESET_COMPETITIVE_POKEMON, isChampionsLegal } from '../data/pokemonDatabase';
 
 const CACHE_PREFIX = 'pokeapi_cache_';
 
@@ -22,7 +22,7 @@ interface PokeApiMove {
 }
 
 /**
- * Format string to Title Case (e.g. "flutter-mane" -> "Flutter Mane")
+ * Format string to Title Case (e.g. "garchomp" -> "Garchomp")
  */
 export function formatDisplayName(rawName: string): string {
   return rawName
@@ -39,9 +39,10 @@ export interface PokemonIndexItem {
 
 /**
  * Fast in-memory / cached index of all Pokemon names for instant autocomplete (1-2 characters)
+ * Excludes Paradox, Treasures of Ruin, and Legendaries not legal in Pokemon Champions
  */
 export async function getPokemonNameIndex(): Promise<PokemonIndexItem[]> {
-  const cacheKey = `${CACHE_PREFIX}full_name_index`;
+  const cacheKey = `${CACHE_PREFIX}champions_legal_index_v2`;
   try {
     const cached = localStorage.getItem(cacheKey);
     if (cached) return JSON.parse(cached);
@@ -51,15 +52,17 @@ export async function getPokemonNameIndex(): Promise<PokemonIndexItem[]> {
     const res = await fetch('https://pokeapi.co/api/v2/pokemon?limit=1025');
     if (!res.ok) return [];
     const data = await res.json();
-    const list: PokemonIndexItem[] = data.results.map((r: any, idx: number) => {
-      const parts = r.url.split('/').filter(Boolean);
-      const id = parseInt(parts[parts.length - 1], 10) || idx + 1;
-      return {
-        id,
-        name: r.name,
-        displayName: formatDisplayName(r.name),
-      };
-    });
+    const list: PokemonIndexItem[] = data.results
+      .filter((r: any) => isChampionsLegal(r.name))
+      .map((r: any, idx: number) => {
+        const parts = r.url.split('/').filter(Boolean);
+        const id = parseInt(parts[parts.length - 1], 10) || idx + 1;
+        return {
+          id,
+          name: r.name,
+          displayName: formatDisplayName(r.name),
+        };
+      });
     try {
       localStorage.setItem(cacheKey, JSON.stringify(list));
     } catch (e) {}

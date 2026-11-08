@@ -60,7 +60,7 @@ app.post('/api/analyze-synergy', async (req, res) => {
 - Role: ${m.role || 'Attacker'}`;
     }).join('\n\n');
 
-    const prompt = `Analyze this competitive Pokémon team for "${teamName || 'Competitive Squad'}" in ${battleFormat === 'doubles' ? 'Doubles (VGC 4v4)' : 'Singles (3v3)'} battle format.
+    const prompt = `Analyze this competitive Pokémon team for "${teamName || 'Competitive Squad'}" in ${battleFormat === 'doubles' ? 'Doubles (VGC 4v4)' : 'Singles (3v3)'} format for POKEMON CHAMPIONS.
 
 Squad Composition (${activeMembers.length} active Pokémon):
 ${teamDescription}
@@ -74,11 +74,16 @@ Pre-Calculated Metrics:
 - Types Hit Super-Effectively: ${(offensiveCoverage || []).join(', ') || 'None'}
 - Types NOT hit super-effectively: ${(uncoveredTypes || []).join(', ') || 'None'}
 
+CRITICAL FORMAT RULES:
+- This is specifically for POKÉMON CHAMPIONS format.
+- ALL Paradox Pokémon (Flutter Mane, Iron Bundle, etc.), ALL Treasures of Ruin (Chien-Pao, Chi-Yu, etc.), and ALL Legendaries/Mythicals (Urshifu, Koraidon, Miraidon, Ogerpon, Tornadus, Landorus, etc.) are STRICTLY ILLEGAL/BANNED.
+- NEVER suggest or mention banned Pokémon (Flutter Mane, Urshifu, Chien-Pao, etc.). ONLY suggest legal Pokémon Champions species (e.g. Incineroar, Rillaboom, Kingambit, Gholdengo, Archaludon, Dragonite, Garchomp, Amoonguss, Farigiraf, Sneasler, Dragapult, Pelipper, Volcarona, Primarina, Grimmsnarl, Tyranitar, Excadrill, Dondozo, Clefable, Gastrodon, Ursaluna).
+
 Provide an ultra-clear, fast, decision-ready audit report.
 The user needs to quickly skim it and make team choices.
 Structure it as a bulleted list where each point states:
-1. Exactly what the problem is (e.g. "No Water-type resistance: Vulnerable to Rain teams and Urshifu-Rapid-Strike.").
-2. A direct solutions list for that bullet point (e.g., "Add Ogerpon-Wellspring or Rillaboom", "Equip Passho Berry").
+1. Exactly what the problem is (e.g. "No Water-type resistance: Vulnerable to Rain teams and Palafin/Dondozo.").
+2. A direct solutions list for that bullet point (e.g., "Add Gastrodon or Amoonguss", "Equip Passho Berry").
 3. A list of which Pokémon on this squad are threatened by this problem.
 Include missing resistances, shared weaknesses (2+ members weak to a type), missing offensive coverage, and speed/support gaps.`;
 
@@ -88,7 +93,7 @@ Include missing resistances, shared weaknesses (2+ members weak to a type), miss
           model: 'gemini-3.8-flash',
           contents: prompt,
           config: {
-            systemInstruction: `You are an elite competitive Pokémon coach. The user wants quick, skimmable decision reports. Format your feedback strictly as concise problem statements paired directly with actionable solution bullet points, and identify threatened squad members.`,
+            systemInstruction: `You are an elite competitive Pokémon Champions coach. In Pokémon Champions, all Paradox Pokémon, Treasures of Ruin, and Legendaries/Mythicals are strictly banned. Only recommend and discuss legal Pokémon Champions species. Format feedback as quick, skimmable bullet points with actionable solutions.`,
             responseMimeType: 'application/json',
             responseSchema: {
               type: Type.OBJECT,
@@ -212,7 +217,7 @@ Include missing resistances, shared weaknesses (2+ members weak to a type), miss
           severity: weakCount >= 2 ? 'critical' : 'warning',
           typeCategory: typeCap,
           solutions: [
-            `Add a defensive ${typeCap} pivot or redirector (e.g. Rillaboom or Ogerpon-Wellspring).`,
+            `Add a defensive ${typeCap} pivot or redirector (e.g. Amoonguss, Rillaboom, or Gastrodon).`,
             `Equip a type-resist damage-reduction berry (e.g. Passho/Yache/Shuca Berry) or Focus Sash.`,
             `Utilize high-speed offensive pressure to eliminate enemy ${typeCap} attackers before they move.`
           ],

@@ -2,9 +2,9 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { PokemonSpecies, PokemonType } from '../types/pokemon';
 import { PRESET_COMPETITIVE_POKEMON } from '../data/pokemonDatabase';
 import { fetchPokemonFromPokeAPI, getPokemonNameIndex, PokemonIndexItem } from '../services/pokeapi';
-import { ALL_POKEMON_TYPES } from '../data/types';
+import { ALL_POKEMON_TYPES, TYPE_METADATA } from '../data/types';
 import { TypeBadge } from './TypeBadge';
-import { Search, X, Loader2, Check } from 'lucide-react';
+import { Search, X, Loader2 } from 'lucide-react';
 
 interface PokemonSearchModalProps {
   isOpen: boolean;
@@ -20,7 +20,8 @@ export const PokemonSearchModal: React.FC<PokemonSearchModalProps> = ({
   targetSlotIndex,
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedType, setSelectedType] = useState<PokemonType | 'all'>('all');
+  // Default is null -> All types are assumed
+  const [selectedType, setSelectedType] = useState<PokemonType | null>(null);
   const [nameIndex, setNameIndex] = useState<PokemonIndexItem[]>([]);
   const [loadingSelection, setLoadingSelection] = useState<string | null>(null);
 
@@ -35,7 +36,7 @@ export const PokemonSearchModal: React.FC<PokemonSearchModalProps> = ({
   useEffect(() => {
     if (isOpen) {
       setSearchQuery('');
-      setSelectedType('all');
+      setSelectedType(null);
       setLoadingSelection(null);
     }
   }, [isOpen]);
@@ -46,7 +47,7 @@ export const PokemonSearchModal: React.FC<PokemonSearchModalProps> = ({
 
     // 1. Filter presets
     let matchedPresets = PRESET_COMPETITIVE_POKEMON;
-    if (selectedType !== 'all') {
+    if (selectedType) {
       matchedPresets = matchedPresets.filter(p => p.types.includes(selectedType));
     }
     if (q) {
@@ -58,8 +59,8 @@ export const PokemonSearchModal: React.FC<PokemonSearchModalProps> = ({
       );
     }
 
-    // If query is empty and selectedType is 'all', show preset roster
-    if (!q && selectedType === 'all') {
+    // If query is empty and no type is selected, show full default preset roster
+    if (!q && !selectedType) {
       return { presets: matchedPresets, indexMatches: [] };
     }
 
@@ -106,11 +107,11 @@ export const PokemonSearchModal: React.FC<PokemonSearchModalProps> = ({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/75 backdrop-blur-xs">
       <div
-        className="w-full max-w-md max-h-[88vh] bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-150 my-auto"
+        className="w-full max-w-lg max-h-[90vh] bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-150 my-auto"
         role="dialog"
         aria-modal="true"
       >
-        {/* Header - Clean, No Badges, No Fluff */}
+        {/* Header */}
         <div className="px-4 py-3 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
           <h3 className="font-display font-bold text-base text-slate-900 dark:text-white">
             Slot #{targetSlotIndex + 1}: Select Pokémon
@@ -124,7 +125,7 @@ export const PokemonSearchModal: React.FC<PokemonSearchModalProps> = ({
           </button>
         </div>
 
-        {/* Compact Search Bar */}
+        {/* Search Bar & 3-Row x 6-Column Type Grid */}
         <div className="p-3 border-b border-slate-200 dark:border-slate-800 space-y-2.5 bg-slate-50/50 dark:bg-slate-950/40">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
@@ -147,36 +148,45 @@ export const PokemonSearchModal: React.FC<PokemonSearchModalProps> = ({
             )}
           </div>
 
-          {/* Type Filter: 5 Columns Grid, No Horizontal Scrollbar */}
-          <div className="grid grid-cols-5 gap-1">
-            <button
-              type="button"
-              onClick={() => setSelectedType('all')}
-              className={`py-1 px-1 text-[11px] font-semibold rounded-md text-center transition-all truncate ${
-                selectedType === 'all'
-                  ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-xs'
-                  : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700'
-              }`}
-            >
-              All
-            </button>
-            {ALL_POKEMON_TYPES.map(type => {
-              const isSelected = selectedType === type;
-              return (
+          {/* 18 Types: Exactly 3 rows of 6 columns. Default is All (no selection). */}
+          <div>
+            <div className="flex items-center justify-between mb-1.5 px-0.5">
+              <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
+                Filter by Type {selectedType ? <span className="font-bold text-slate-900 dark:text-white uppercase">({selectedType})</span> : <span className="text-slate-400">(All types active)</span>}
+              </span>
+              {selectedType && (
                 <button
-                  key={type}
                   type="button"
-                  onClick={() => setSelectedType(type)}
-                  className={`py-1 px-0.5 text-[10px] font-bold uppercase rounded-md text-center transition-all truncate ${
-                    isSelected
-                      ? 'ring-2 ring-indigo-500 scale-[1.02] shadow-xs'
-                      : 'opacity-85 hover:opacity-100'
-                  }`}
+                  onClick={() => setSelectedType(null)}
+                  className="text-[11px] font-semibold text-indigo-600 dark:text-indigo-400 hover:underline"
                 >
-                  <TypeBadge type={type} size="sm" />
+                  Reset to All
                 </button>
-              );
-            })}
+              )}
+            </div>
+
+            <div className="grid grid-cols-6 gap-1 sm:gap-1.5">
+              {ALL_POKEMON_TYPES.map(type => {
+                const isSelected = selectedType === type;
+                const meta = TYPE_METADATA[type];
+                return (
+                  <button
+                    key={type}
+                    type="button"
+                    onClick={() => setSelectedType(isSelected ? null : type)}
+                    className={`h-7 px-1 rounded-md text-[10px] font-bold uppercase transition-all flex items-center justify-center border text-center select-none ${
+                      isSelected
+                        ? `${meta.badgeBg} ${meta.badgeText} ${meta.border} ring-2 ring-indigo-500 dark:ring-indigo-400 scale-[1.03] shadow-md`
+                        : selectedType !== null
+                        ? `${meta.badgeBg} ${meta.badgeText} ${meta.border} opacity-35 hover:opacity-80`
+                        : `${meta.badgeBg} ${meta.badgeText} ${meta.border} opacity-90 hover:opacity-100 hover:scale-[1.02]`
+                    }`}
+                  >
+                    <span className="truncate">{meta?.label || type}</span>
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </div>
 
@@ -204,7 +214,6 @@ export const PokemonSearchModal: React.FC<PokemonSearchModalProps> = ({
                     <span className="font-bold text-sm text-slate-900 dark:text-white truncate">
                       {poke.displayName}
                     </span>
-                    {/* Relevant combat stats: HP & Speed instead of tier */}
                     <span className="text-[11px] font-mono text-slate-500 dark:text-slate-400">
                       HP {poke.baseStats.hp} · Spe {poke.baseStats.spe}
                     </span>

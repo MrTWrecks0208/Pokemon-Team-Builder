@@ -14,7 +14,7 @@ import {
   TeamReport,
 } from './types/pokemon';
 import { SAMPLE_TEAMS } from './data/sampleTeams';
-import { PRESET_COMPETITIVE_POKEMON } from './data/pokemonDatabase';
+import { PRESET_COMPETITIVE_POKEMON, isChampionsLegal } from './data/pokemonDatabase';
 import { NATURE_MAP } from './data/natures';
 import { COMPETITIVE_ITEMS } from './data/items';
 import { analyzeTeam, calculateAllStats, calculatePokemonPowerRating } from './utils/statCalculators';
@@ -87,17 +87,35 @@ export default function App() {
 
   // Active Team & Format State
   const [battleFormat, setBattleFormat] = useState<BattleFormat>('doubles');
-  const [teamName, setTeamName] = useState('World Championship Sun Core');
+  const [teamName, setTeamName] = useState(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_CURRENT_TEAM);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed.name && !parsed.name.includes('World Championship Sun Core')) {
+          return parsed.name;
+        }
+      }
+    } catch {}
+    return 'Champions Doubles Balance Core';
+  });
   const [isEditingTeamName, setIsEditingTeamName] = useState(false);
   const [members, setMembers] = useState<(TeamMember | null)[]>(() => {
     try {
       const saved = localStorage.getItem(STORAGE_CURRENT_TEAM);
       if (saved) {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed.members)) return parsed.members;
+        if (Array.isArray(parsed.members)) {
+          const allLegal = parsed.members.every((m: TeamMember | null) =>
+            !m || isChampionsLegal(m.species.name)
+          );
+          if (allLegal && parsed.members.length === 6) {
+            return parsed.members;
+          }
+        }
       }
     } catch {}
-    // Default to the first championship sample team
+    // Default to the first championship sample team (100% Champions legal)
     return SAMPLE_TEAMS[0].members;
   });
 
