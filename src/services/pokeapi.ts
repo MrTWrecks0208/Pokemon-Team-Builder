@@ -31,6 +31,44 @@ export function formatDisplayName(rawName: string): string {
     .join(' ');
 }
 
+export interface PokemonIndexItem {
+  id: number;
+  name: string;
+  displayName: string;
+}
+
+/**
+ * Fast in-memory / cached index of all Pokemon names for instant autocomplete (1-2 characters)
+ */
+export async function getPokemonNameIndex(): Promise<PokemonIndexItem[]> {
+  const cacheKey = `${CACHE_PREFIX}full_name_index`;
+  try {
+    const cached = localStorage.getItem(cacheKey);
+    if (cached) return JSON.parse(cached);
+  } catch (e) {}
+
+  try {
+    const res = await fetch('https://pokeapi.co/api/v2/pokemon?limit=1025');
+    if (!res.ok) return [];
+    const data = await res.json();
+    const list: PokemonIndexItem[] = data.results.map((r: any, idx: number) => {
+      const parts = r.url.split('/').filter(Boolean);
+      const id = parseInt(parts[parts.length - 1], 10) || idx + 1;
+      return {
+        id,
+        name: r.name,
+        displayName: formatDisplayName(r.name),
+      };
+    });
+    try {
+      localStorage.setItem(cacheKey, JSON.stringify(list));
+    } catch (e) {}
+    return list;
+  } catch (err) {
+    return [];
+  }
+}
+
 /**
  * Fetch move details from PokéAPI with caching
  */

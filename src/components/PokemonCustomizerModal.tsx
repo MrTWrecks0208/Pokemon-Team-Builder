@@ -65,23 +65,36 @@ export const PokemonCustomizerModal: React.FC<PokemonCustomizerModalProps> = ({
   
   // In Pokémon Champions: 66 total Stat Points budget, max 32 per stat
   const [statPoints, setStatPoints] = useState<StatSpread>(() => {
-    // If incoming member has old 252 EV spread, scale it down to Champions (max 32 per stat)
     const raw = member.evs || { hp: 0, atk: 0, def: 0, spa: 0, spd: 0, spe: 0 };
-    return {
-      hp: Math.min(32, raw.hp > 32 ? Math.round(raw.hp / 8) : raw.hp),
-      atk: Math.min(32, raw.atk > 32 ? Math.round(raw.atk / 8) : raw.atk),
-      def: Math.min(32, raw.def > 32 ? Math.round(raw.def / 8) : raw.def),
-      spa: Math.min(32, raw.spa > 32 ? Math.round(raw.spa / 8) : raw.spa),
-      spd: Math.min(32, raw.spd > 32 ? Math.round(raw.spd / 8) : raw.spd),
-      spe: Math.min(32, raw.spe > 32 ? Math.round(raw.spe / 8) : raw.spe),
+    const scaled: StatSpread = {
+      hp: Math.min(32, raw.hp > 32 ? Math.round(raw.hp / 8) : raw.hp || 0),
+      atk: Math.min(32, raw.atk > 32 ? Math.round(raw.atk / 8) : raw.atk || 0),
+      def: Math.min(32, raw.def > 32 ? Math.round(raw.def / 8) : raw.def || 0),
+      spa: Math.min(32, raw.spa > 32 ? Math.round(raw.spa / 8) : raw.spa || 0),
+      spd: Math.min(32, raw.spd > 32 ? Math.round(raw.spd / 8) : raw.spd || 0),
+      spe: Math.min(32, raw.spe > 32 ? Math.round(raw.spe / 8) : raw.spe || 0),
     };
+
+    // Hard ceiling: Total can never exceed 66 points
+    let sum = scaled.hp + scaled.atk + scaled.def + scaled.spa + scaled.spd + scaled.spe;
+    if (sum > 66) {
+      const statsOrder: StatName[] = ['hp', 'def', 'spd', 'spa', 'atk', 'spe'];
+      for (const s of statsOrder) {
+        if (sum <= 66) break;
+        const excess = sum - 66;
+        const reduction = Math.min(scaled[s], excess);
+        scaled[s] -= reduction;
+        sum -= reduction;
+      }
+    }
+    return scaled;
   });
 
   const [role, setRole] = useState(member.role || 'Competitor');
   const [itemSearch, setItemSearch] = useState('');
   const [activeTab, setActiveTab] = useState<'stats' | 'moves' | 'build'>('stats');
 
-  // Total Stat Points used in Pokémon Champions (Budget: 66 points)
+  // Total Stat Points used in Pokémon Champions (Budget: strictly 66 points)
   const totalPoints = useMemo(() => {
     return (
       (statPoints.hp || 0) +
@@ -93,7 +106,7 @@ export const PokemonCustomizerModal: React.FC<PokemonCustomizerModalProps> = ({
     );
   }, [statPoints]);
 
-  const remainingPoints = 66 - totalPoints;
+  const remainingPoints = Math.max(0, 66 - totalPoints);
 
   // Real-time calculated Level 50 stats with Champions formula (fixed 31 IVs + stat points)
   const calculatedStats = useMemo(() => {
@@ -105,13 +118,13 @@ export const PokemonCustomizerModal: React.FC<PokemonCustomizerModalProps> = ({
     return calculatePokemonPowerRating(calculatedStats, member.species, moves, item, nature);
   }, [calculatedStats, member.species, moves, item, nature]);
 
-  // Handle stat point change (0 - 32 per stat, 66 max total)
+  // Handle stat point change: Strictly capped so sum can NEVER exceed 66
   const handleStatPointChange = (stat: StatName, val: number) => {
-    const targetVal = isNaN(val) ? 0 : Math.max(0, Math.min(32, val));
-    const currentWithoutStat = totalPoints - (statPoints[stat] || 0);
-    const maxAllowed = Math.min(32, 66 - currentWithoutStat);
-    const finalVal = Math.min(targetVal, maxAllowed);
-    setStatPoints(prev => ({ ...prev, [stat]: Math.max(0, finalVal) }));
+    const currentPoints = statPoints[stat] || 0;
+    const currentWithout = totalPoints - currentPoints;
+    const maxAllowed = Math.max(0, Math.min(32, 66 - currentWithout));
+    const target = isNaN(val) ? 0 : Math.max(0, Math.min(maxAllowed, val));
+    setStatPoints(prev => ({ ...prev, [stat]: target }));
   };
 
   // Quick Presets tailored to Champions 66-point budget
@@ -438,6 +451,7 @@ export const PokemonCustomizerModal: React.FC<PokemonCustomizerModalProps> = ({
                   {(['hp', 'atk', 'def', 'spa', 'spd', 'spe'] as StatName[]).map(stat => {
                     const base = member.species.baseStats[stat];
                     const currentPoints = statPoints[stat] || 0;
+                    const maxAllowed = Math.min(32, currentPoints + remainingPoints);
                     const calcVal = calculatedStats[stat];
                     const isBoosted = nature.increasedStat === stat;
                     const isHindered = nature.decreasedStat === stat;
@@ -467,13 +481,14 @@ export const PokemonCustomizerModal: React.FC<PokemonCustomizerModalProps> = ({
                           <span className="text-[11px] text-slate-400 font-mono">Base {base}</span>
                         </div>
 
-                        {/* Point controls: [0] [-] Slider [+] [32] */}
+                        {/* Point controls: [0] [-] Slider [+] [Max] */}
                         <div className="col-span-6 flex items-center gap-2">
                           <button
                             type="button"
+                            disabled={currentPoints <= 0}
                             onClick={() => handleStatPointChange(stat, 0)}
-                            className="w-6 h-6 rounded bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 font-mono text-[10px] text-slate-600 dark:text-slate-400 flex items-center justify-center"
-                            title="Set to 0"
+                            className="w-6 h-6 rounded bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 font-mono text-[10px] text-slate-600 dark:text-slate-400 disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center"
+                            title="Reset to 0"
                           >
                             0
                           </button>
@@ -481,14 +496,14 @@ export const PokemonCustomizerModal: React.FC<PokemonCustomizerModalProps> = ({
                             type="button"
                             disabled={currentPoints <= 0}
                             onClick={() => handleStatPointChange(stat, currentPoints - 1)}
-                            className="w-6 h-6 rounded bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 font-bold text-xs text-slate-700 dark:text-slate-300 disabled:opacity-40 flex items-center justify-center"
+                            className="w-6 h-6 rounded bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 font-bold text-xs text-slate-700 dark:text-slate-300 disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center"
                           >
                             -
                           </button>
                           <input
                             type="range"
                             min={0}
-                            max={32}
+                            max={maxAllowed}
                             step={1}
                             value={currentPoints}
                             onChange={e => handleStatPointChange(stat, parseInt(e.target.value, 10))}
@@ -498,24 +513,25 @@ export const PokemonCustomizerModal: React.FC<PokemonCustomizerModalProps> = ({
                             type="button"
                             disabled={currentPoints >= 32 || remainingPoints <= 0}
                             onClick={() => handleStatPointChange(stat, currentPoints + 1)}
-                            className="w-6 h-6 rounded bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 font-bold text-xs text-slate-700 dark:text-slate-300 disabled:opacity-40 flex items-center justify-center"
+                            className="w-6 h-6 rounded bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 font-bold text-xs text-slate-700 dark:text-slate-300 disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center"
                           >
                             +
                           </button>
                           <button
                             type="button"
-                            onClick={() => handleStatPointChange(stat, currentPoints + remainingPoints)}
-                            className="w-6 h-6 rounded bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 font-mono text-[10px] text-slate-600 dark:text-slate-400 flex items-center justify-center"
-                            title="Invest Maximum Remaining"
+                            disabled={currentPoints >= 32 || remainingPoints <= 0}
+                            onClick={() => handleStatPointChange(stat, maxAllowed)}
+                            className="px-1.5 h-6 rounded bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 font-mono text-[10px] text-slate-600 dark:text-slate-400 disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center"
+                            title={`Invest available points (up to ${maxAllowed})`}
                           >
-                            32
+                            Max
                           </button>
 
                           {/* Numeric input box */}
                           <input
                             type="number"
                             min={0}
-                            max={32}
+                            max={maxAllowed}
                             value={currentPoints}
                             onChange={e => handleStatPointChange(stat, parseInt(e.target.value, 10) || 0)}
                             className="w-12 px-1 py-0.5 text-center font-mono rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 font-bold text-xs"
@@ -778,18 +794,14 @@ export const PokemonCustomizerModal: React.FC<PokemonCustomizerModalProps> = ({
 
         {/* Footer Ribbon with Save Action */}
         <div className="px-5 py-3 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/80 flex items-center justify-between gap-3">
-          <div className="text-xs text-slate-500">
+          <div className="text-xs text-slate-500 font-medium">
             {remainingPoints > 0 ? (
-              <span className="text-amber-600 dark:text-amber-400 font-medium">
-                Tip: You have {remainingPoints} unused Stat Points
-              </span>
-            ) : remainingPoints === 0 ? (
-              <span className="text-emerald-600 dark:text-emerald-400 font-medium">
-                ✓ All 66 Stat Points allocated
+              <span className="text-slate-600 dark:text-slate-400">
+                {remainingPoints} of 66 points available to assign
               </span>
             ) : (
-              <span className="text-rose-600 font-bold">
-                ⚠️ Over budget by {Math.abs(remainingPoints)} points!
+              <span className="text-emerald-600 dark:text-emerald-400 font-semibold">
+                ✓ All 66 points allocated
               </span>
             )}
           </div>
