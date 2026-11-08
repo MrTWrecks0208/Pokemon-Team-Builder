@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { BattleFormat, MoveCategory, TeamMember } from '../types/pokemon';
 import { TypeBadge } from './TypeBadge';
+import { MoveCategoryIcon } from './MoveCategoryIcon';
 import {
   GripVertical,
   Sliders,
@@ -60,17 +61,6 @@ export const PokemonCard: React.FC<PokemonCardProps> = ({
   };
 
   const slotRole = getSlotRole(slotIndex, battleFormat);
-
-  const getMoveCategoryIcon = (category: MoveCategory) => {
-    switch (category) {
-      case 'physical':
-        return <span title="Physical Attack" className="text-orange-500 font-bold text-xs">💥</span>;
-      case 'special':
-        return <span title="Special Attack" className="text-indigo-400 font-bold text-xs">🔮</span>;
-      case 'status':
-        return <span title="Status Move" className="text-emerald-500 font-bold text-xs">🛡️</span>;
-    }
-  };
 
   // Drag handlers
   const handleDragStart = (e: React.DragEvent) => {
@@ -270,8 +260,8 @@ export const PokemonCard: React.FC<PokemonCardProps> = ({
               >
                 {move ? (
                   <>
-                    <div className="flex items-center gap-1 truncate">
-                      {getMoveCategoryIcon(move.category)}
+                    <div className="flex items-center gap-1.5 truncate">
+                      <MoveCategoryIcon category={move.category} size="sm" />
                       <span className="truncate font-medium text-slate-800 dark:text-slate-200">
                         {move.name}
                       </span>

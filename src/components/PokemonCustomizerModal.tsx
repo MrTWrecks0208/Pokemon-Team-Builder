@@ -20,6 +20,7 @@ import {
 import { COMPETITIVE_ITEMS } from '../data/items';
 import { calculateAllStats, calculatePokemonPowerRating } from '../utils/statCalculators';
 import { TypeBadge } from './TypeBadge';
+import { MoveCategoryIcon } from './MoveCategoryIcon';
 import {
   X,
   SlidersHorizontal,
@@ -177,17 +178,6 @@ export const PokemonCustomizerModal: React.FC<PokemonCustomizerModalProps> = ({
       powerRating,
     });
     onClose();
-  };
-
-  const getMoveCategoryIcon = (category: MoveCategory) => {
-    switch (category) {
-      case 'physical':
-        return <span title="Physical">💥</span>;
-      case 'special':
-        return <span title="Special">🔮</span>;
-      case 'status':
-        return <span title="Status">🛡️</span>;
-    }
   };
 
   return (
@@ -588,7 +578,7 @@ export const PokemonCustomizerModal: React.FC<PokemonCustomizerModalProps> = ({
                               <span className="font-bold text-xs text-slate-900 dark:text-white truncate">
                                 {currentMove.name}
                               </span>
-                              <span className="text-xs">{getMoveCategoryIcon(currentMove.category)}</span>
+                              <MoveCategoryIcon category={currentMove.category} size="sm" />
                             </div>
                             <div className="flex items-center gap-3 text-[11px] text-slate-500 mt-1">
                               <span>Power: {currentMove.power || '—'}</span>
@@ -658,7 +648,7 @@ export const PokemonCustomizerModal: React.FC<PokemonCustomizerModalProps> = ({
                             <span className="font-semibold text-xs text-slate-900 dark:text-white">
                               {m.name}
                             </span>
-                            <span className="text-xs">{getMoveCategoryIcon(m.category)}</span>
+                            <MoveCategoryIcon category={m.category} size="sm" />
                           </div>
                           <p className="text-[11px] text-slate-500 dark:text-slate-400 line-clamp-1 mt-0.5">
                             {m.description}
