@@ -41,27 +41,6 @@ export const PokemonCard: React.FC<PokemonCardProps> = ({
 }) => {
   const [imgError, setImgError] = useState(false);
 
-  // Slot role labels based on battle format
-  const getSlotRole = (index: number, format: BattleFormat): string => {
-    if (format === 'doubles') {
-      if (index === 0) return 'Lead Duo 1';
-      if (index === 1) return 'Lead Duo 2';
-      if (index === 2) return 'Core Pivot';
-      if (index === 3) return 'Support / Tech';
-      if (index === 4) return 'Late Anchor';
-      return 'Flex Closer';
-    }
-    // Singles
-    if (index === 0) return 'Primary Lead';
-    if (index === 1) return 'Physical Breaker';
-    if (index === 2) return 'Special Sweeper';
-    if (index === 3) return 'Defensive Wall';
-    if (index === 4) return 'Speed Pivot';
-    return 'Endgame Sweeper';
-  };
-
-  const slotRole = getSlotRole(slotIndex, battleFormat);
-
   // Drag handlers
   const handleDragStart = (e: React.DragEvent) => {
     e.dataTransfer.setData('text/plain', slotIndex.toString());
@@ -95,7 +74,7 @@ export const PokemonCard: React.FC<PokemonCardProps> = ({
         }`}
       >
         <div className="absolute top-3 left-3 text-[11px] font-semibold text-slate-400 dark:text-slate-500">
-          Slot {slotIndex + 1} · {slotRole}
+          Slot #{slotIndex + 1}
         </div>
 
         <div className="w-14 h-14 rounded-full bg-slate-100 dark:bg-slate-800 group-hover:bg-indigo-50 dark:group-hover:bg-indigo-950/60 text-slate-400 dark:text-slate-500 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 flex items-center justify-center transition-all mb-3 text-2xl font-light">
@@ -126,7 +105,7 @@ export const PokemonCard: React.FC<PokemonCardProps> = ({
           : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-slate-300 dark:hover:border-slate-700'
       }`}
     >
-      {/* Top Bar with Slot Info, Role, & Controls */}
+      {/* Top Bar with Slot Info & Controls */}
       <div className="px-3 py-2 border-b border-slate-100 dark:border-slate-800/80 bg-slate-50/70 dark:bg-slate-900/70 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
         <div className="flex items-center gap-1.5">
           <button
@@ -137,11 +116,7 @@ export const PokemonCard: React.FC<PokemonCardProps> = ({
             <GripVertical className="w-3.5 h-3.5" />
           </button>
           <span className="font-semibold text-slate-700 dark:text-slate-300">
-            #{slotIndex + 1}
-          </span>
-          <span aria-hidden="true" className="text-slate-300 dark:text-slate-700">·</span>
-          <span className="font-medium text-[11px] text-slate-500 dark:text-slate-400 truncate max-w-[90px] sm:max-w-[120px]">
-            {slotRole}
+            Slot #{slotIndex + 1}
           </span>
         </div>
 
@@ -202,9 +177,6 @@ export const PokemonCard: React.FC<PokemonCardProps> = ({
             ) : (
               <div className="text-xl font-bold text-slate-400">⚡</div>
             )}
-            <span className="absolute bottom-0.5 right-1 text-[9px] font-mono text-slate-400 font-semibold">
-              Lv50
-            </span>
           </div>
 
           <div className="flex-1 min-w-0">
@@ -228,7 +200,7 @@ export const PokemonCard: React.FC<PokemonCardProps> = ({
               ))}
             </div>
 
-            {/* Held Item & Ability */}
+            {/* Held Item, Ability & Nature */}
             <div className="flex flex-col gap-0.5 mt-2 text-[11px] text-slate-600 dark:text-slate-400">
               <div className="flex items-center gap-1.5 truncate">
                 <span className="text-slate-400 dark:text-slate-500 font-medium shrink-0">Item:</span>
@@ -242,74 +214,120 @@ export const PokemonCard: React.FC<PokemonCardProps> = ({
                   {ability.name}
                 </span>
               </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Moves Grid */}
-        <div className="space-y-1 bg-slate-50 dark:bg-slate-950/40 p-2 rounded-xl border border-slate-100 dark:border-slate-800/60">
-          <div className="text-[10px] uppercase font-semibold tracking-wider text-slate-400 dark:text-slate-500 px-1 flex items-center justify-between">
-            <span>Moveset</span>
-            <span className="text-[9px] font-normal lowercase">{nature.name} nature</span>
-          </div>
-          <div className="grid grid-cols-2 gap-1.5">
-            {moves.map((move, idx) => (
-              <div
-                key={idx}
-                className="px-2 py-1 bg-white dark:bg-slate-800/90 rounded-md border border-slate-200/70 dark:border-slate-700/60 flex items-center justify-between gap-1 text-[11px] min-h-[26px]"
-              >
-                {move ? (
-                  <>
-                    <div className="flex items-center gap-1.5 truncate">
-                      <MoveCategoryIcon category={move.category} size="sm" />
-                      <span className="truncate font-medium text-slate-800 dark:text-slate-200">
-                        {move.name}
-                      </span>
-                    </div>
-                    <TypeBadge type={move.type} size="sm" className="scale-80 origin-right" />
-                  </>
-                ) : (
-                  <span className="text-slate-400 italic text-[10px]">Empty Slot</span>
-                )}
+              <div className="flex items-center gap-1.5 truncate">
+                <span className="text-slate-400 dark:text-slate-500 font-medium shrink-0">Nature:</span>
+                <span className="truncate font-semibold text-slate-700 dark:text-slate-200">
+                  {nature.name}
+                </span>
               </div>
-            ))}
+            </div>
           </div>
         </div>
 
-        {/* Calculated Stats Ribbon */}
-        <div className="grid grid-cols-6 gap-1 bg-slate-100/70 dark:bg-slate-800/40 p-1.5 rounded-lg text-center font-mono text-[10px]">
-          <div>
-            <div className="text-[9px] text-slate-400 uppercase font-sans">HP</div>
-            <div className="font-bold text-slate-700 dark:text-slate-200 tabular-nums">{calculatedStats.hp}</div>
-          </div>
-          <div>
-            <div className="text-[9px] text-slate-400 uppercase font-sans">ATK</div>
-            <div className={`font-bold tabular-nums ${nature.increasedStat === 'atk' ? 'text-rose-500' : nature.decreasedStat === 'atk' ? 'text-blue-400' : 'text-slate-700 dark:text-slate-200'}`}>
-              {calculatedStats.atk}
+        {/* Dual-Column Container: Attributes on Left, Moveset on Right */}
+        <div className="bg-slate-50 dark:bg-slate-950/40 p-3 rounded-xl border border-slate-100 dark:border-slate-800/60 grid grid-cols-[145px_1fr] gap-3.5">
+          {/* Left Column: Attributes & Points */}
+          <div className="flex flex-col">
+            <div className="text-[10px] uppercase font-bold tracking-wider text-slate-500 dark:text-slate-400 pb-1.5 border-b border-slate-200/60 dark:border-slate-800/60">
+              Attributes
+            </div>
+            <div className="flex flex-col gap-1.5 pt-2">
+              {[
+                { label: 'HP', val: calculatedStats.hp, sp: member.evs.hp },
+                { label: 'Atk', val: calculatedStats.atk, sp: member.evs.atk, isUp: nature.increasedStat === 'atk', isDown: nature.decreasedStat === 'atk' },
+                { label: 'Def', val: calculatedStats.def, sp: member.evs.def, isUp: nature.increasedStat === 'def', isDown: nature.decreasedStat === 'def' },
+                { label: 'Sp. Atk', val: calculatedStats.spa, sp: member.evs.spa, isUp: nature.increasedStat === 'spa', isDown: nature.decreasedStat === 'spa' },
+                { label: 'Sp. Def', val: calculatedStats.spd, sp: member.evs.spd, isUp: nature.increasedStat === 'spd', isDown: nature.decreasedStat === 'spd' },
+                { label: 'Speed', val: calculatedStats.spe, sp: member.evs.spe, isUp: nature.increasedStat === 'spe', isDown: nature.decreasedStat === 'spe' },
+              ].map(stat => (
+                <div
+                  key={stat.label}
+                  title={
+                    stat.isUp
+                      ? `Nature boost (+10% from ${nature.name})`
+                      : stat.isDown
+                      ? `Nature reduction (-10% from ${nature.name})`
+                      : undefined
+                  }
+                  className={`flex items-center justify-between px-2 py-1 rounded-lg text-xs transition-colors ${
+                    stat.isUp
+                      ? 'bg-rose-50/90 dark:bg-rose-950/40 border border-rose-200/90 dark:border-rose-900/60'
+                      : stat.isDown
+                      ? 'bg-blue-50/90 dark:bg-blue-950/40 border border-blue-200/90 dark:border-blue-900/60'
+                      : 'bg-white dark:bg-slate-800/90 border border-slate-200/70 dark:border-slate-700/60'
+                  }`}
+                >
+                  <div className="flex items-center gap-1">
+                    <span className="font-semibold text-slate-700 dark:text-slate-200 text-xs">
+                      {stat.label}
+                    </span>
+                    {stat.isUp && (
+                      <span className="text-[9px] font-black text-rose-500 leading-none" title="Nature +10%">▲</span>
+                    )}
+                    {stat.isDown && (
+                      <span className="text-[9px] font-black text-blue-500 leading-none" title="Nature -10%">▼</span>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-1 font-mono text-xs">
+                    {stat.sp > 0 && (
+                      <span className="text-[10px] text-indigo-500 dark:text-indigo-400 font-bold" title={`Stat Points: +${stat.sp}`}>
+                        +{stat.sp}
+                      </span>
+                    )}
+                    <span
+                      className={`font-bold tabular-nums text-xs ${
+                        stat.isUp
+                          ? 'text-rose-600 dark:text-rose-400'
+                          : stat.isDown
+                          ? 'text-blue-600 dark:text-blue-400'
+                          : 'text-slate-800 dark:text-slate-100'
+                      }`}
+                    >
+                      {stat.val}
+                    </span>
+                  </div>
+                </div>
+              ))}
+
+              {/* Red / Blue Nature Legend */}
+              <div className="pt-1.5 mt-0.5 flex items-center justify-between text-[10px] text-slate-400 dark:text-slate-500 border-t border-slate-200/60 dark:border-slate-800/60 px-1">
+                <span className="flex items-center gap-1 text-rose-600 dark:text-rose-400 font-semibold" title="Red: Nature boosts this stat by +10%">
+                  ▲ +10%
+                </span>
+                <span className="text-slate-300 dark:text-slate-600">·</span>
+                <span className="flex items-center gap-1 text-blue-600 dark:text-blue-400 font-semibold" title="Blue: Nature reduces this stat by -10%">
+                  ▼ -10%
+                </span>
+              </div>
             </div>
           </div>
-          <div>
-            <div className="text-[9px] text-slate-400 uppercase font-sans">DEF</div>
-            <div className={`font-bold tabular-nums ${nature.increasedStat === 'def' ? 'text-rose-500' : nature.decreasedStat === 'def' ? 'text-blue-400' : 'text-slate-700 dark:text-slate-200'}`}>
-              {calculatedStats.def}
+
+          {/* Right Column: Move set (1 column of four, 4 down with clean uniform spacing) */}
+          <div className="flex flex-col">
+            <div className="text-[10px] uppercase font-bold tracking-wider text-slate-500 dark:text-slate-400 pb-1.5 border-b border-slate-200/60 dark:border-slate-800/60">
+              Moveset
             </div>
-          </div>
-          <div>
-            <div className="text-[9px] text-slate-400 uppercase font-sans">SPA</div>
-            <div className={`font-bold tabular-nums ${nature.increasedStat === 'spa' ? 'text-rose-500' : nature.decreasedStat === 'spa' ? 'text-blue-400' : 'text-slate-700 dark:text-slate-200'}`}>
-              {calculatedStats.spa}
-            </div>
-          </div>
-          <div>
-            <div className="text-[9px] text-slate-400 uppercase font-sans">SPD</div>
-            <div className={`font-bold tabular-nums ${nature.increasedStat === 'spd' ? 'text-rose-500' : nature.decreasedStat === 'spd' ? 'text-blue-400' : 'text-slate-700 dark:text-slate-200'}`}>
-              {calculatedStats.spd}
-            </div>
-          </div>
-          <div>
-            <div className="text-[9px] text-slate-400 uppercase font-sans">SPE</div>
-            <div className={`font-bold tabular-nums ${nature.increasedStat === 'spe' ? 'text-rose-500' : nature.decreasedStat === 'spe' ? 'text-blue-400' : 'text-slate-700 dark:text-slate-200'}`}>
-              {calculatedStats.spe}
+            <div className="grid grid-rows-4 gap-2 pt-2 flex-1">
+              {moves.map((move, idx) => (
+                <div
+                  key={idx}
+                  className="px-2.5 py-2 bg-white dark:bg-slate-800/90 rounded-lg border border-slate-200/70 dark:border-slate-700/60 flex items-center justify-between gap-2 text-xs shadow-2xs"
+                >
+                  {move ? (
+                    <>
+                      <div className="flex items-center gap-2 truncate min-w-0">
+                        <MoveCategoryIcon category={move.category} size="sm" />
+                        <span className="truncate font-medium text-slate-800 dark:text-slate-200 text-xs">
+                          {move.name}
+                        </span>
+                      </div>
+                      <TypeBadge type={move.type} size="sm" className="shrink-0" />
+                    </>
+                  ) : (
+                    <span className="text-slate-400 italic text-xs">Empty Slot {idx + 1}</span>
+                  )}
+                </div>
+              ))}
             </div>
           </div>
         </div>

@@ -134,9 +134,7 @@ export function calculatePokemonPowerRating(
 
   // 4. Item synergy (up to 15 pts)
   let itemScore = item ? 12 : 0;
-  if (item?.id === 'booster-energy' && (species.name.includes('iron') || species.name.includes('flutter') || species.name.includes('scream') || species.name.includes('roaring') || species.name.includes('great-tusk'))) {
-    itemScore += 3;
-  } else if (item?.id === 'choice-scarf' || item?.id === 'focus-sash' || item?.id === 'life-orb' || item?.id === 'assault-vest') {
+  if (item?.id === 'choice-scarf' || item?.id === 'focus-sash' || item?.id === 'life-orb' || item?.id === 'leftovers') {
     itemScore += 3;
   }
 
@@ -234,7 +232,7 @@ export function analyzeTeam(members: (TeamMember | null)[]): TeamAnalysis {
   // Speed and balance checks
   if (activeMembers.length >= 4) {
     if (physicalCount === 0 && specialCount > 6) {
-      synergyWarnings.push('Heavy Special skew: Vulnerable to Blissey/Assault Vest Special walls.');
+      synergyWarnings.push('Heavy Special skew: Vulnerable to Blissey and high Sp. Def walls.');
     } else if (specialCount === 0 && physicalCount > 6) {
       synergyWarnings.push('Heavy Physical skew: Vulnerable to Intimidate, Will-O-Wisp, and Dondozo/Physical walls.');
     } else if (physicalCount > 2 && specialCount > 2) {

@@ -31,18 +31,11 @@ export const TeamSlotsGrid: React.FC<TeamSlotsGridProps> = ({
       {/* Section Header */}
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 dark:border-slate-800 pb-3">
         <div>
-          <div className="flex items-center gap-2">
-            <h2 className="font-display font-bold text-lg text-slate-900 dark:text-white">
-              Championship Roster
-            </h2>
-            <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
-              {activeCount} / 6 Active
-            </span>
-          </div>
+          <h2 className="font-display font-bold text-lg text-slate-900 dark:text-white">
+            Pokémon Champions Lineup
+          </h2>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-            {battleFormat === 'doubles'
-              ? 'VGC Standard: Bring 4 of your 6 Pokémon to battle. Drag slots to rearrange lead pairings and pivots.'
-              : 'Singles Standard: Bring 3 of your 6 Pokémon to battle. Drag slots to test your primary leads and sweepers.'}
+            Drag any slot to reorder your team. Click a card to customize its nature, ability, held item, and moveset.
           </p>
         </div>
 
